@@ -14,6 +14,11 @@ import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 
+enum StorageType
+{
+	ANDROID_DATA;
+	ROOT;
+}
 /**
  * ...
  * @author: Saw (M.A. Jigsaw)
@@ -23,26 +28,28 @@ using StringTools;
 
 class SUtil
 {
-	#if (android && MODS_ALLOWED)
-	private static var aDir:String = null; // android dir
-	#end
-
-	public static function getPath():String
+      public static function getStorageDirectory(type:StorageType = ANDROID_DATA):String
 	{
 		#if (android && MODS_ALLOWED)
-		if (aDir != null && aDir.length > 0)
-			return aDir;
-		else
-			return aDir = Tools.getExternalStorageDirectory() + '/' + '.' + Application.current.meta.get('file') + '/';
+		var daPath:String = '';
+		switch (type)
+		{
+			case ANDROID_DATA:
+				daPath = Context.getExternalFilesDir(null) + '/';
+			case ROOT:
+				daPath = Context.getFilesDir() + '/';
+		}
+		return daPath;
+		#elseif ios
+		return LimeSystem.applicationStorageDirectory;
 		#else
 		return '';
 		#end
 	}
-
 	public static function doTheCheck()
 	{
 		#if (android && MODS_ALLOWED)
-		if (!Permissions.getGrantedPermissions().contains(Permissions.READ_EXTERNAL_STORAGE) || !Permissions.getGrantedPermissions().contains(PermissionsList.WRITE_EXTERNAL_STORAGE))
+		if (!Permissions.getGrantedPermissions().contains(Permissions.READ_EXTERNAL_STORAGE) || !Permissions.getGrantedPermissions().contains(Permissions.WRITE_EXTERNAL_STORAGE))
 		{
 			Permissions.requestPermissions([Permissions.READ_EXTERNAL_STORAGE, Permissions.WRITE_EXTERNAL_STORAGE]);
 			SUtil.applicationAlert('Permissions', "if you accepted the permissions all good if not expect a crash" + '\n' + 'Press Ok to see what happens');//shitty way to stop the app
